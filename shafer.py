@@ -223,31 +223,6 @@ time_points = np.linspace(0, 240, 500) # Simulate over 240 minutes, with 500 poi
 infusion_rate_mcg_per_min = 10 # Example infusion rate
 infusion_rate_mg_per_min = infusion_rate_mcg_per_min / 1000 # Convert to mg if using mg for drug amount
 
-def get_current_infusion_rate(t):
-    if t <= 60: # Infuse for the first 60 minutes
-        return infusion_rate_mg_per_min
-    else:
-        return 0
-    
-def fentanyl_pk_model_time_varying(A, t, params):
-    """
-    Modified ODE function to include a time-varying infusion rate.
-    """
-    A1, A2, A3 = A
-
-    k10 = params['k10']
-    k12 = params['k12']
-    k21 = params['k21']
-    k13 = params['k13']
-    k31 = params['k31']
-
-    current_infusion = get_current_infusion_rate(t) # Get the infusion rate at the current time
-
-    dA1dt = current_infusion - (k10 + k12 + k13) * A1 + k21 * A2 + k31 * A3
-    dA2dt = k12 * A1 - k21 * A2
-    dA3dt = k13 * A1 - k31 * A3
-
-    return [dA1dt, dA2dt, dA3dt]
 solution = odeint(fentanyl_pk_model_time_varying, initial_amounts, time_points, args=(current_params,))
 
 A1_over_time = solution[:, 0] # Amount in central compartment
@@ -259,6 +234,7 @@ predicted_C1_ng_per_mL = predicted_C1_mg_per_L * 1000 # Convert mg/L to ng/mL (1
 
 plt.figure(figsize=(10, 6))
 plt.plot(time_points, predicted_C1_ng_per_mL)
+
 plt.xlabel("Time (minutes)")
 plt.ylabel("Fentanyl Concentration (ng/mL)")
 plt.title("Predicted Fentanyl Plasma Concentration over Time")
